@@ -1,33 +1,22 @@
 import { resolveShowConfigPath } from "@babel/core/lib/config/files";
-import res from "express/lib/response";
-import connection from "../config/connectDB"
+import res, { json } from "express/lib/response";
+import pool from "../config/connectDB"
 
+let getHomepage = async (req, res) => {
 
-let getHomepage = (req, res) => {
-    //logic
-    let data = [];
+    // query database
+    const [rows, fields] = await pool.execute('SELECT * FROM users ');
+    return res.render('index.ejs', { dataUser: rows })
+}
 
-    // simple query
-    connection.query(
-        'SELECT * FROM `users`',
-        function (err, results, fields) {
-            console.log(results); // results contains rows returned by server
-            results.map((row) => {
-                data.push({
-                    id: row.id,
-                    firstName: row.firstName,
-                    lastName: row.lastName,
-                    email: row.email,
-                    address: row.address,
-                })
-            });
-            return res.render('index.ejs', { dataUser: data })
-        }
-    );
-
+let getDetailPage = async (req, res) => {
+    let userId = req.params.id;
+    const [user] = await pool.execute(`select * from users where id = ?`, [userId])
+    return res.send(JSON.stringify(user))
 }
 
 // hàm module.exports dùng để export nhiều hàm
 module.exports = {
-    getHomepage
+    getHomepage,
+    getDetailPage
 }
